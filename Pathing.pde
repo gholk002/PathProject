@@ -30,7 +30,7 @@ Camera camera;
 ArrayList<Cell> makePath(Cell start, Cell goal, Cell[][] node){
   ArrayList<Cell> aStar = new ArrayList();
   aStar.add(start);
-  
+  println("Generating path:");
   float[][] heuristic = new float[12][12]; //generating heuristics for each node, -1 if wall
   for(int i = 0; i < 12; i++){
     for(int j = 0; j < 12; j++){
@@ -46,7 +46,6 @@ ArrayList<Cell> makePath(Cell start, Cell goal, Cell[][] node){
   }
   int i = start.i; //casting truncates decimal
   int j = start.j;
-  //println(i +", " +j);
   while(aStar.get(aStar.size()-1).v.distanceTo(goal.v) > 5){ //loops until last element in list is goal
     float smallH = Integer.MAX_VALUE; //finds node with smallest heuristic
     
@@ -83,6 +82,7 @@ ArrayList<Cell> makePath(Cell start, Cell goal, Cell[][] node){
     i = nextNode.i; 
     j = nextNode.j;
   }
+  println("\nHeuristic from starting node: "+ heuristic[start.i][start.j]);
   return aStar;
 }
 
@@ -103,9 +103,9 @@ void setup(){
       nodePos[i][j] = new Cell(-1,-1,new Vec2(0,0));
     }
   }
-  int gridcell = height/12;
+  int gridcell = height/12; //length of each cell
   pos = new Vec2(gridcell*1.5, gridcell*1.5); //starting position at cell (1,1)
-  vel = new Vec2(0, 0);
+  vel = new Vec2(1, 0);
   startPos = new Cell((int)pos.y/gridcell, (int)pos.x/gridcell, pos.copy());
   
   goalPos = new Cell(10, 10, new Vec2(gridcell*10.5, gridcell*10.5)); //goal position at cell (10,10)
@@ -131,7 +131,8 @@ void setup(){
   //strokeWeight(2);
   //circle(pos.x, pos.y, gridcell*0.9);
   path = makePath(startPos, goalPos, nodePos); //initialize path
-  println(path);
+  println("Final Path: \n" + path);
+  println("\nTotal Distance: " + gridcell*(path.size()-1));
 }
 
 void draw(){
@@ -164,6 +165,11 @@ void draw(){
   translate(pos.x, pos.y, 0.5*gridcell);
   sphere(gridcell*0.9);
   popMatrix();
+  pushMatrix();
+  fill(10,200,10);
+  translate(goalPos.j*gridcell,goalPos.i*gridcell,0);
+  square(0,0,gridcell);
+  popMatrix();
 }
 
 void update(float dt){
@@ -174,9 +180,17 @@ void update(float dt){
 
   if(path.size() > 1 && pos.distanceTo(path.get(0).v) < 5){ //if arrived at node
     path.remove(0);
+    startPos = new Cell((int)pos.y/gridcell, (int)pos.x/gridcell, pos.copy());
   }
 }
 
+void mousePressed(){ // new goal, new path
+    Vec2 goal = new Vec2(mouseX, mouseY);
+    int i = (int)(goal.y/gridcell);
+    int j = (int)(goal.x/gridcell);
+    goalPos = new Cell(i, j, goal);
+    path = makePath(startPos, goalPos, nodePos);
+}
 void keyPressed()
 {
   camera.HandleKeyPressed();
